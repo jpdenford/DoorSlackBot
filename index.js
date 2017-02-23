@@ -1,15 +1,15 @@
-//logging
-const winston = require('winston')
+const winston = require('winston') // logging
+// network
+const https = require('https')
+const querystring = require('querystring')
+
+
 var logger = new (winston.Logger)({
   transports: [
     new (winston.transports.Console)(),
     new (winston.transports.File)({ filename: 'toiletbot.log' })
   ]
 });
-// network
-const https = require('https')
-const querystring = require('querystring')
-
 // Setup slack constants
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const SLACK_CHANNEL_ID = 'C4971HM3M'
@@ -46,12 +46,13 @@ function readDoor(){
 // Keep checking door every so often
 setInterval(checkStatus, DOOR_UPDATE_FREQ);
 
-function updateSlack(status){
-  post(status)
+function updateSlack(status) {
+  post(status);
 }
 
 function post(text) {
-  const {postData, options} = newMessageOpts(text)
+  // auxillary function to construct request params
+  const {queryString, options} = newMessageOpts(text)
 
   //create reqest
   const req = https.request(options, (res) => {
@@ -66,27 +67,50 @@ function post(text) {
   });
 
   // write data to request and send
-  req.write(postData);
+  req.write(queryString);
   req.end();
-  logger.info('Sent request to ' + options.path + ' with ' + postData)
+  logger.info('Sent request to ' + options.path + ' with ' + queryString)
 }
-// construct values for posting new message
-function newMessageOpts(text){
-  let postData = querystring.stringify({
-    token : SLACK_TOKEN,
-    channel: SLACK_CHANNEL_ID,
-    text
-  });
 
-  let options = {
-    hostname: 'slack.com',
-    path: '/api/chat.postMessage',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+// construct values for posting new message
+function newMessageOpts(text) {
+    const queryParams = {
+        token: SLACK_TOKEN,
+        channel: SLACK_CHANNEL_ID,
+        text
+    };
+
+    return {
+        queryString: querystring.stringify(queryParams),
+        options: {
+            hostname: 'slack.com',
+            path: '/api/chat.postMessage',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
+    };
+}
+
+function updateMessageOpts(text, timestamp) {
+    const queryParams = {
+        token: SLACK_TOKEN,
+        channel: SLACK_CHANNEL_ID,
+        text: text,
+        ts: timestamp
+    };
+    return {
+        queryString: querystring.stringify(queryParams),
+        options: {
+            hostname: 'slack.com',
+            path: '/api/chat.update',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
     }
-  };
-  return {postData: postData, options: options };
 }
 
 // // returns the latest message in the channel
@@ -108,8 +132,8 @@ function newMessageOpts(text){
 //   });
 //
 //   // write data to request body
-//   req.write(postData);
+//   req.write(queryString);
 //   req.end();
 //
-//   console.log(postData);
+//   console.log(queryString);
 // }
