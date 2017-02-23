@@ -17,7 +17,7 @@ const CLOSED_MESSAGE = ':no_entry_sign:'
 const OPEN_MESSAGE = ':toilet:'
 
 // other
-const DOOR_UPDATE_FREQ = 1000 // frequency to check door and update
+const DOOR_UPDATE_FREQ = 5000 // frequency to check door and update
 const DOOR_OPEN = 'OPEN'
 const DOOR_CLOSED = 'CLOSE'
 
@@ -29,6 +29,7 @@ function checkStatus() {
   const curStatus = readDoor();
   if(curStatus != prevStatus){
     prevStatus = curStatus;
+    logger.info('Door changed to '+ curStatus);
     const msg = curStatus == DOOR_OPEN? OPEN_MESSAGE : CLOSED_MESSAGE;
     updateSlack(msg);
   }
@@ -37,9 +38,8 @@ function checkStatus() {
 // TODO replace with hardware call
 // simulate the opening and closing of the door
 function readDoor(){
-  const didChange = Math.random() > 0.9;
-  const newStat = didChange ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
-  if (didChange) logger.info('Door changed to '+ newStat);
+  // const didChange = Math.random() > 0.;
+  const newStat = true ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
   return newStat;
 }
 
@@ -52,7 +52,8 @@ function updateSlack(status) {
 
 function post(text) {
   // auxillary function to construct request params
-  const {queryString, options} = newMessageOpts(text)
+  const options = newMessageOpts(text)
+  console.log('posting', options);
 
   //create reqest
   const req = https.request(options, (res) => {
@@ -67,9 +68,8 @@ function post(text) {
   });
 
   // write data to request and send
-  req.write(queryString);
   req.end();
-  logger.info('Sent request to ' + options.path + ' with ' + queryString)
+  logger.info('Sent request to ' + options.path )
 }
 
 // construct values for posting new message
@@ -81,16 +81,13 @@ function newMessageOpts(text) {
     };
 
     return {
-        queryString: querystring.stringify(queryParams),
-        options: {
-            hostname: 'slack.com',
-            path: '/api/chat.postMessage',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
+        hostname: 'slack.com',
+        path: '/api/chat.postMessage?' + querystring.stringify(queryParams),
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
         }
-    };
+    }
 }
 
 function updateMessageOpts(text, timestamp) {
