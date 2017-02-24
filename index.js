@@ -1,3 +1,4 @@
+// TODO use --harmony-async-await
 const Promise = require('promise')
 const logger = require('./logger')
 // network
@@ -45,6 +46,11 @@ function updateSlack(status, prevMsgTimestamp) {
   return new Promise(function(fulfill, reject) {
     const text = CLOSED_MESSAGE;
     // auxillary function to construct request params
+    // const res = await request('xx')
+    // if(res.bla){
+    //   dosomthing
+    // }
+
     request(getMessagesOpts(1)).then(res => {
       const lastSlackMessage = res.messages[0]
       // TODO flatten this using Promise control flows
@@ -65,6 +71,7 @@ function updateSlack(status, prevMsgTimestamp) {
 }
 
 // returns Promise[Object] constining response
+// TODO make async & use node-fetch lib which uses promise based requests
 function request(options) {
   return new Promise(function(fulfill, reject){
     //create reqest
