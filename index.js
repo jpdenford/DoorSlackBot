@@ -1,15 +1,9 @@
-const winston = require('winston') // logging
 const Promise = require('promise')
+const logger = require('./logger')
 // network
 const https = require('https')
 const querystring = require('querystring')
 
-var logger = new (winston.Logger)({
-  transports: [
-    new (winston.transports.Console)(),
-    new (winston.transports.File)({ filename: 'toiletbot.log' })
-  ]
-});
 // Setup slack constants
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const SLACK_CHANNEL_ID = 'C4971HM3M'
@@ -48,7 +42,7 @@ function readDoor(){
 }
 
 function updateSlack(status, prevMsgTimestamp) {
-  return new Promise(function(fulfill, reject){
+  return new Promise(function(fulfill, reject) {
     const text = CLOSED_MESSAGE;
     // auxillary function to construct request params
     request(getMessagesOpts(1)).then(res => {
