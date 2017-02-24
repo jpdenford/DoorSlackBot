@@ -22,7 +22,7 @@ const DOOR_OPEN = 'OPEN'
 const DOOR_CLOSED = 'CLOSE'
 
 // state
-let messageTimestamp = undefined
+let prevMsgTimestamp = undefined
 let prevStatus = DOOR_OPEN
 
 function checkStatus() {
@@ -31,7 +31,8 @@ function checkStatus() {
     prevStatus = curStatus;
     logger.info('Door changed to '+ curStatus);
     const msg = curStatus == DOOR_OPEN? OPEN_MESSAGE : CLOSED_MESSAGE;
-    updateSlack(msg);
+    // update and save the timestamp of the message
+    updateSlack(msg, prevMsgTimestamp).then(ts => {prevMsgTimestamp = ts;});
   }
 }
 
@@ -46,12 +47,27 @@ function readDoor(){
   return newStat;
 }
 
-function updateSlack(status) {
-  const text = CLOSED_MESSAGE;
-  // auxillary function to construct request params
-  request(newMessageOpts(text)).then(res => {
-    console.log(res);
-  }, logger.error);
+function updateSlack(status, prevMsgTimestamp) {
+  return new Promise(function(fulfill, reject){
+    const text = CLOSED_MESSAGE;
+    // auxillary function to construct request params
+    request(getMessagesOpts(1)).then(res => {
+      const lastSlackMessage = res.messages[0]
+      // TODO flatten this using Promise control flows
+      if(lastSlackMessage && prevMsgTimestamp && lastSlackMessage.ts == prevMsgTimestamp) {
+        // update message
+        request(updateMessageOpts(text, prevMsgTimestamp)).then(res => {
+          fulfill(res.ts); // return timstamp
+        }, reject);
+      } else {
+        // post new
+        request(newMessageOpts(text)).then(res => {
+          fulfill(res.ts) // return timestamp
+        }, reject);
+      }
+      console.log(res);
+    }, logger.error);
+  });
 }
 
 // returns Promise[Object] constining response
@@ -65,12 +81,11 @@ function request(options) {
     });
 
     req.on('error', reject);
-    // send request
-    req.end();
+    req.end(); // send request
     logger.info('Sent request to ' + options.path);
   }).then(chunk => { //parse the json
     let data = JSON.parse(chunk);
-    logger.info('Slack Response: ' + JSON.stringify(data));
+    logger.info('Response received: ' + JSON.stringify(data));
     return data;
   });
 }
