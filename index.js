@@ -1,8 +1,8 @@
 const winston = require('winston') // logging
+const Promise = require('promise')
 // network
 const https = require('https')
 const querystring = require('querystring')
-
 
 var logger = new (winston.Logger)({
   transports: [
@@ -35,6 +35,9 @@ function checkStatus() {
   }
 }
 
+// Keep checking door every so often
+setInterval(checkStatus, DOOR_UPDATE_FREQ);
+
 // TODO replace with hardware call
 // simulate the opening and closing of the door
 function readDoor(){
@@ -43,36 +46,36 @@ function readDoor(){
   return newStat;
 }
 
-// Keep checking door every so often
-setInterval(checkStatus, DOOR_UPDATE_FREQ);
-
 function updateSlack(status) {
-  post(status);
-}
-
-function post(text) {
+  const text = CLOSED_MESSAGE;
   // auxillary function to construct request params
-  const options = newMessageOpts(text)
-  console.log('posting', options);
-
-  //create reqest
-  const req = https.request(options, (res) => {
-    res.on('data', (chunk) => {
-      let data = JSON.parse(chunk);
-      logger.info('Slack Response: ' + JSON.stringify(data));
-    });
-  });
-
-  req.on('error', (e) => {
-    logger.error(`problem with request: ${e.message}`);
-  });
-
-  // write data to request and send
-  req.end();
-  logger.info('Sent request to ' + options.path )
+  request(newMessageOpts(text)).then(res => {
+    console.log(res);
+  }, logger.error);
 }
 
-// construct values for posting new message
+// returns Promise[Object] constining response
+function request(options) {
+  return new Promise(function(fulfill, reject){
+    //create reqest
+    const req = https.request(options, (res) => {
+      res.on('data', (chunk) => {
+        fulfill(chunk);
+      });
+    });
+
+    req.on('error', reject);
+    // send request
+    req.end();
+    logger.info('Sent request to ' + options.path);
+  }).then(chunk => { //parse the json
+    let data = JSON.parse(chunk);
+    logger.info('Slack Response: ' + JSON.stringify(data));
+    return data;
+  });
+}
+
+// helper functions construct arguments for posting new messages
 function newMessageOpts(text) {
     const queryParams = {
         token: SLACK_TOKEN,
@@ -90,6 +93,7 @@ function newMessageOpts(text) {
     }
 }
 
+// update a given message
 function updateMessageOpts(text, timestamp) {
     const queryParams = {
         token: SLACK_TOKEN,
@@ -97,40 +101,31 @@ function updateMessageOpts(text, timestamp) {
         text: text,
         ts: timestamp
     };
+
     return {
-        queryString: querystring.stringify(queryParams),
-        options: {
-            hostname: 'slack.com',
-            path: '/api/chat.update',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
+        hostname: 'slack.com',
+        path: '/api/chat.update?' + querystring.stringify(queryParams),
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
         }
     }
 }
 
-// // returns the latest message in the channel
-// function getLatestMessage() {
-//   let req = https.request(options, (res) => {
-//     console.log(`STATUS: ${res.statusCode}`);
-//     console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-//     res.setEncoding('utf8');
-//     res.on('data', (chunk) => {
-//       console.log(`BODY: ${chunk}`);
-//     });
-//     res.on('end', () => {
-//       console.log('No more data in response.');
-//     });
-//   });
-//
-//   req.on('error', (e) => {
-//     console.log(`problem with request: ${e.message}`);
-//   });
-//
-//   // write data to request body
-//   req.write(queryString);
-//   req.end();
-//
-//   console.log(queryString);
-// }
+// get the last n messages in the channel
+function getMessagesOpts(count) {
+    const queryParams = {
+        token: SLACK_TOKEN,
+        channel: SLACK_CHANNEL_ID,
+        count: count
+    };
+
+    return {
+        hostname: 'slack.com',
+        path: '/api/channels.history?' + querystring.stringify(queryParams),
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    }
+}
