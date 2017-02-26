@@ -10,6 +10,7 @@
   "author": "jpdenford",
   "license": "ISC",
   "dependencies": {
+    "command-line-args": "^4.0.1",
     "node-fetch": "^1.6.3",
     "pi-gpio": "0.0.8",
     "promise": "^7.1.1",

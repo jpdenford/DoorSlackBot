@@ -1,13 +1,21 @@
 // TODO use --harmony-async-await
 const Promise = require('promise')
 const logger = require('./logger')
+// args
+const commandLineArgs = require('command-line-args')
+const optionDefinitions = [
+  { name: 'channelID', alias: 'c', type: String, required: true },
+  { name: 'pin', alias: 'p', type: Number, defaultValue: 11 }
+]
+const options = commandLineArgs(optionDefinitions)
 // network
 const fetch = require('node-fetch')
 const querystring = require('querystring')
 
 // Setup slack constants
-const SLACK_TOKEN = process.env.SLACK_TOKEN
-const SLACK_CHANNEL_ID = 'C4971HM3M'
+const SLACK_TOKEN = process.env.TBOT_TOKEN
+const SLACK_CHANNEL_ID = options.channelID
+if(SLACK_TOKEN == '' || !SLACK_CHANNEL_ID) usageAndExit();
 const CLOSED_MESSAGE = ':no_entry_sign:'
 const OPEN_MESSAGE = ':toilet:'
 
@@ -101,4 +109,11 @@ function getMessagesOpts(count) {
     };
 
     return 'https://slack.com/api/channels.history?' + querystring.stringify(queryParams);
+}
+
+function usageAndExit(){
+  // TODO give useful info 'command-line-commands'
+  const required = optionDefinitions.filter(arg => arg.required).map(arg => arg.name)
+  logger.error('Please provide required arguments:', required.join(', '))
+  process.exit(1)
 }
