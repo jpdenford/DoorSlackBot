@@ -2,7 +2,6 @@
 const Promise = require('promise')
 const logger = require('./logger')
 // network
-// const https = require('https')
 const fetch = require('node-fetch')
 const querystring = require('querystring')
 
@@ -73,8 +72,10 @@ function updateSlack(status, prevMsgTimestamp) {
 
 // returns Promise[Object] constining response
 // TODO make async & use node-fetch lib which uses promise based requests
-function request(path) {
-  return fetch(path).then(res => res.text()).then(text => JSON.parse(text))
+async function request(path) {
+  const res = await fetch(path)
+  const text = await res.text()
+  return JSON.parse(text)
 }
 
 // helper functions construct arguments for posting new messages
