@@ -36,8 +36,8 @@ setInterval(checkStatus, DOOR_UPDATE_FREQ);
 
 // TODO replace with hardware call
 // simulate the opening and closing of the door
-function readDoor(){
-  console.info('Reading Door Status');
+function readDoor() {
+  logger.info('Reading Door Status');
   const didChange = Math.random() > 0.8;
   const newStat = didChange ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
   return newStat;
@@ -57,13 +57,12 @@ async function updateSlack(status, prevMsgTimestamp) {
       const newMessageRes = await request(newMessageOpts(status))
       return newMessageRes.ts
     }
-  } catch(e){
-    logger.error('Slack Update Failed' + e);
+  } catch(e) {
+    logger.error(e);
   }
 }
 
-// returns Promise[Object] constining response
-// TODO make async & use node-fetch lib which uses promise based requests
+// returns Promise[Object] constining response body
 async function request(path) {
   const res = await fetch(path)
   const text = await res.text()
