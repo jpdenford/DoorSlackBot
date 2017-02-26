@@ -10,8 +10,9 @@ if (!fs.existsSync(dir)){
 
 const logger = new(winston.Logger)({
     transports: [
-        new(winston.transports.Console)(),
+        new(winston.transports.Console)({ level: 'info'}),
         new(winston.transports.DailyRotateFile)({
+            level: 'warn',
             name: 'file',
             datePattern: '.yyyy-MM-ddTHH',
             filename: dir + "/toiletbot.log"

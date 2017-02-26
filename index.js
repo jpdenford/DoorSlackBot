@@ -12,7 +12,7 @@ const CLOSED_MESSAGE = ':no_entry_sign:'
 const OPEN_MESSAGE = ':toilet:'
 
 // other
-const DOOR_UPDATE_FREQ = 5000 // frequency to check door and update
+const DOOR_UPDATE_FREQ = 1000 // frequency to check door and update
 const DOOR_OPEN = 'OPEN'
 const DOOR_CLOSED = 'CLOSE'
 
@@ -37,13 +37,14 @@ setInterval(checkStatus, DOOR_UPDATE_FREQ);
 // TODO replace with hardware call
 // simulate the opening and closing of the door
 function readDoor(){
-  // const didChange = Math.random() > 0.;
-  const newStat = true ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
+  console.info('Reading Door Status');
+  const didChange = Math.random() > 0.8;
+  const newStat = didChange ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
   return newStat;
 }
 
 async function updateSlack(status, prevMsgTimestamp) {
-  try{
+  try {
     const historyRes = await request(getMessagesOpts(1))
     const lastSlackMessage = historyRes.messages[0]
     // TODO flatten this using Promise control flows
