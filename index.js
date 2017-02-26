@@ -2,7 +2,8 @@
 const Promise = require('promise')
 const logger = require('./logger')
 // network
-const https = require('https')
+// const https = require('https')
+const fetch = require('node-fetch')
 const querystring = require('querystring')
 
 // Setup slack constants
@@ -44,7 +45,7 @@ function readDoor(){
 
 function updateSlack(status, prevMsgTimestamp) {
   return new Promise(function(fulfill, reject) {
-    const text = CLOSED_MESSAGE;
+    const text = status;
     // auxillary function to construct request params
     // const res = await request('xx')
     // if(res.bla){
@@ -72,23 +73,8 @@ function updateSlack(status, prevMsgTimestamp) {
 
 // returns Promise[Object] constining response
 // TODO make async & use node-fetch lib which uses promise based requests
-function request(options) {
-  return new Promise(function(fulfill, reject){
-    //create reqest
-    const req = https.request(options, (res) => {
-      res.on('data', (chunk) => {
-        fulfill(chunk);
-      });
-    });
-
-    req.on('error', reject);
-    req.end(); // send request
-    logger.info('Sent request to ' + options.path);
-  }).then(chunk => { //parse the json
-    let data = JSON.parse(chunk);
-    logger.info('Response received: ' + JSON.stringify(data));
-    return data;
-  });
+function request(path) {
+  return fetch(path).then(res => res.text()).then(text => JSON.parse(text))
 }
 
 // helper functions construct arguments for posting new messages
@@ -99,14 +85,7 @@ function newMessageOpts(text) {
         text
     };
 
-    return {
-        hostname: 'slack.com',
-        path: '/api/chat.postMessage?' + querystring.stringify(queryParams),
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    }
+    return 'https://slack.com/api/chat.postMessage?' + querystring.stringify(queryParams);
 }
 
 // update a given message
@@ -118,14 +97,7 @@ function updateMessageOpts(text, timestamp) {
         ts: timestamp
     };
 
-    return {
-        hostname: 'slack.com',
-        path: '/api/chat.update?' + querystring.stringify(queryParams),
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    }
+    return 'https://slack.com/api/chat.update?' + querystring.stringify(queryParams);
 }
 
 // get the last n messages in the channel
@@ -136,12 +108,5 @@ function getMessagesOpts(count) {
         count: count
     };
 
-    return {
-        hostname: 'slack.com',
-        path: '/api/channels.history?' + querystring.stringify(queryParams),
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    }
+    return 'https://slack.com/api/channels.history?' + querystring.stringify(queryParams);
 }
