@@ -28,19 +28,20 @@ const DOOR_CLOSED = 'CLOSE'
 let prevMsgTimestamp = undefined
 let prevStatus = DOOR_OPEN
 
+// Keep checking door every so often
+setInterval(checkStatus, DOOR_UPDATE_FREQ);
+
+// check the status of the door and update slack if necessary
 function checkStatus() {
   const curStatus = readDoor();
   if(curStatus != prevStatus){
     prevStatus = curStatus;
     logger.info('Door changed to ' + curStatus);
-    const msg = curStatus == DOOR_OPEN? OPEN_MESSAGE : CLOSED_MESSAGE;
+    const msg = curStatus == DOOR_OPEN ? OPEN_MESSAGE : CLOSED_MESSAGE;
     // update and save the timestamp of the message
-    updateSlack(msg, prevMsgTimestamp).then(ts => {prevMsgTimestamp = ts;});
+    updateSlack(msg, prevMsgTimestamp).then(ts => prevMsgTimestamp = ts);
   }
 }
-
-// Keep checking door every so often
-setInterval(checkStatus, DOOR_UPDATE_FREQ);
 
 // TODO replace with hardware call
 // simulate the opening and closing of the door
@@ -53,18 +54,13 @@ function readDoor() {
 
 async function updateSlack(status, prevMsgTimestamp) {
   try {
-    const historyRes = await request(getMessagesOpts(1))
-    const lastSlackMessage = historyRes.messages[0]
-    // TODO flatten this using Promise control flows
-    if(lastSlackMessage && prevMsgTimestamp && lastSlackMessage.ts == prevMsgTimestamp) {
-      // update message
-      const updatedMessage = await request(updateMessageOpts(status, prevMsgTimestamp))
-      return updatedMessage.ts
-    } else {
-      // post new
-      const newMessageRes = await request(newMessageOpts(status))
-      return newMessageRes.ts
+    // if we've already posted a message
+    if(prevMsgTimestamp) {
+      // delete prev message
+      request(deleteMessageOpts(prevMsgTimestamp))
     }
+    const newMessageRes = await request(newMessageOpts(status))
+    return newMessageRes.ts;
   } catch(e) {
     logger.error(e);
   }
@@ -128,3 +124,5 @@ function usageAndExit(){
   logger.error('Please provide token and required arguments:', required.join(', '))
   process.exit(1)
 }
+
+// TODO save timestamp to file on sigint
