@@ -13,9 +13,9 @@ const fetch = require('node-fetch')
 const querystring = require('querystring')
 
 // Setup slack constants
-const SLACK_TOKEN = process.env.TBOT_TOKEN
+const SLACK_TOKEN = process.env.SLACK_TOKEN
 const SLACK_CHANNEL_ID = options.channelID
-if(SLACK_TOKEN == '' || !SLACK_CHANNEL_ID) usageAndExit();
+if(SLACK_TOKEN == '' || SLACK_TOKEN == null || !SLACK_CHANNEL_ID) usageAndExit();
 const CLOSED_MESSAGE = ':no_entry_sign:'
 const OPEN_MESSAGE = ':toilet:'
 
@@ -100,6 +100,17 @@ function updateMessageOpts(text, timestamp) {
     return 'https://slack.com/api/chat.update?' + querystring.stringify(queryParams);
 }
 
+// delete a given message
+function deleteMessageOpts(timestamp) {
+    const queryParams = {
+        token: SLACK_TOKEN,
+        channel: SLACK_CHANNEL_ID,
+        ts: timestamp
+    };
+
+    return 'https://slack.com/api/chat.delete?' + querystring.stringify(queryParams);
+}
+
 // get the last n messages in the channel
 function getMessagesOpts(count) {
     const queryParams = {
@@ -114,6 +125,6 @@ function getMessagesOpts(count) {
 function usageAndExit(){
   // TODO give useful info 'command-line-commands'
   const required = optionDefinitions.filter(arg => arg.required).map(arg => arg.name)
-  logger.error('Please provide required arguments:', required.join(', '))
+  logger.error('Please provide token and required arguments:', required.join(', '))
   process.exit(1)
 }
