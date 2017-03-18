@@ -6,7 +6,7 @@ const gpio = require('rpi-gpio')
 const commandLineArgs = require('command-line-args')
 const optionDefinitions = [
   { name: 'channelID', alias: 'c', type: String, required: true },
-  { name: 'pin', alias: 'p', type: Number, defaultValue: 11 }
+  { name: 'pin', alias: 'p', type: Number, defaultValue: 16 }
 ]
 const options = commandLineArgs(optionDefinitions)
 
@@ -31,7 +31,7 @@ let prevMsgTimestamp = undefined
 let prevStatus = DOOR_OPEN
 
 // gpio
-const PIN = 16;
+const PIN = options.pin;
 gpio.setup(PIN, gpio.DIR_IN, readInput);
 
 // Keep checking door every so often
@@ -53,8 +53,8 @@ async function checkStatus() {
 async function readDoor() {
   const pinValue = await readInput(PIN);
   logger.info('Read Door Status: ' + pinValue);
-  if(pinValue == true) return DOOR_OPEN;
-  return DOOR_CLOSED;
+  if(pinValue) return DOOR_CLOSED;
+  return DOOR_OPEN;
 }
 
 // Reads the value of a pin, returning a promise of the result
