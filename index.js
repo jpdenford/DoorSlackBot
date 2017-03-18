@@ -1,6 +1,7 @@
-// TODO use --harmony-async-await
 const Promise = require('promise')
 const logger = require('./logger')
+const gpio = require('rpi-gpio')
+
 // args
 const commandLineArgs = require('command-line-args')
 const optionDefinitions = [
@@ -8,6 +9,7 @@ const optionDefinitions = [
   { name: 'pin', alias: 'p', type: Number, defaultValue: 11 }
 ]
 const options = commandLineArgs(optionDefinitions)
+
 // network
 const fetch = require('node-fetch')
 const querystring = require('querystring')
@@ -28,12 +30,16 @@ const DOOR_CLOSED = 'CLOSE'
 let prevMsgTimestamp = undefined
 let prevStatus = DOOR_OPEN
 
+// gpio
+const PIN = 16;
+gpio.setup(PIN, gpio.DIR_IN, readInput);
+
 // Keep checking door every so often
 setInterval(checkStatus, DOOR_UPDATE_FREQ);
 
 // check the status of the door and update slack if necessary
-function checkStatus() {
-  const curStatus = readDoor();
+async function checkStatus() {
+  const curStatus = await readDoor();
   if(curStatus != prevStatus){
     prevStatus = curStatus;
     logger.info('Door changed to ' + curStatus);
@@ -43,13 +49,25 @@ function checkStatus() {
   }
 }
 
-// TODO replace with hardware call
-// simulate the opening and closing of the door
-function readDoor() {
-  logger.info('Reading Door Status');
-  const didChange = Math.random() > 0.8;
-  const newStat = didChange ? (prevStatus == DOOR_OPEN? DOOR_CLOSED : DOOR_OPEN) : prevStatus;
-  return newStat;
+// Check if the door is open or closed
+async function readDoor() {
+  const pinValue = await readInput(PIN);
+  logger.info('Read Door Status: ' + pinValue);
+  if(pinValue == true) return DOOR_OPEN;
+  return DOOR_CLOSED;
+}
+
+// Reads the value of a pin, returning a promise of the result
+function readInput(pin) {
+  return new Promise((success, fail) => {
+     gpio.read(pin, function(err, value) {
+       if(err) {
+         fail(err);
+         return;
+       }
+       success(value);	
+     });
+  });
 }
 
 async function updateSlack(status, prevMsgTimestamp) {
