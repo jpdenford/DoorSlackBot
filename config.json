@@ -1,0 +1,7 @@
+{
+  "slack_token": "<insert token here>",
+  "channel_id": "<insert channel id here>",
+  "pin": 16,
+  "open_message": ":admission_tickets:",
+  "closed_message": ":no_entry_sign:"
+}
