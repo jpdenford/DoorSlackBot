@@ -4,7 +4,7 @@ const gpio = require('rpi-gpio')
 const fs = require('fs')
 
 // config
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf8'));
 
 // network
 const fetch = require('node-fetch')
