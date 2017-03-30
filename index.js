@@ -69,10 +69,10 @@ function readInput(pin) {
 async function updateSlack(status, prevMsgTimestamp) {
   try {
     // if we've already posted a message
-    if(prevMsgTimestamp) {
+    /*if(prevMsgTimestamp) {
       // delete prev message
       request(deleteMessageOpts(prevMsgTimestamp))
-    }
+    }*/
     const newMessageRes = await request(newMessageOpts(status))
     return newMessageRes.ts;
   } catch(e) {
