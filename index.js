@@ -92,6 +92,7 @@ function newMessageOpts(text) {
     const queryParams = {
         token: SLACK_TOKEN,
         channel: SLACK_CHANNEL_ID,
+        as_user: true,
         text
     };
 

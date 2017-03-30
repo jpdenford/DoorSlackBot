@@ -3,27 +3,23 @@
 A simple bot using node js to poll a door sensor (gpio pin) and post the result
 to a Slack Channel
 
-### Installation
-
-**Requirements**
+### Requirements
 - Node 7 or later
+- Raspberry PI
 
-```
-  $ git clone https://github.com/jpdenford/ToiletBot.git
-  $ cd ToiletBot
-  $ npm install
-```
+### Installation
+1. ```
+  git clone https://github.com/jpdenford/ToiletBot.git
+  cd ToiletBot
+  npm install
+  ```
+2. Create a Slack Bot  
+   https://api.slack.com/bot-users
+3. Find the channelID where you want the message to be posted  
+   https://api.slack.com/methods/channels.list/test
+4. Put the **channelID** and slackbot **TOKEN** in the *config.json* file
 
 ### Running
-Create a Slack Bot
-https://jpslackbot.slack.com/apps/new/A0F7YS25R-bots
-and export the token to your environment
-`export TBOT_TOKEN=XXXXXXXXX`
-
-Then start the bot with
-`npm start -- --chanelID=123567`
-
-| Name      | Description                  | Default   | Required |
-|-----------|------------------------------|-----------|----------|
-| channelid | slack channel id to post to  | undefined | Yes      |
-| pin       | gpio pin to read door status | 11        | no       |
+Run command
+`sudo node index.js`  
+If you want to leave the process running, run `sudo node index.js &`
