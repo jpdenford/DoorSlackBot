@@ -4,7 +4,8 @@ const gpio = require('rpi-gpio')
 const fs = require('fs')
 
 // config
-const config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf8'));
+const defaultConfig = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf8'))
+const config = Object.assign(defaultConfig, process.env)
 
 // network
 const fetch = require('node-fetch')
@@ -36,12 +37,13 @@ setInterval(checkStatus, DOOR_UPDATE_FREQ);
 // check the status of the door and update slack if necessary
 async function checkStatus() {
   const curStatus = await readDoor();
-  if(curStatus != prevStatus){
+  if(curStatus !== prevStatus){
     prevStatus = curStatus;
     logger.info('Door changed to ' + curStatus);
-    const msg = curStatus == DOOR_OPEN ? OPEN_MESSAGE : CLOSED_MESSAGE;
+    const msg = (curStatus === DOOR_OPEN ? OPEN_MESSAGE : CLOSED_MESSAGE);
     // update and save the timestamp of the message
-    updateSlack(msg, prevMsgTimestamp).then(ts => prevMsgTimestamp = ts);
+    const timestamp = await updateSlack(msg, prevMsgTimestamp)
+    prevMsgTimestamp = timestamp;
   }
 }
 
@@ -49,8 +51,7 @@ async function checkStatus() {
 async function readDoor() {
   const pinValue = await readInput(PIN);
   logger.info('Read Door Status: ' + pinValue);
-  if(pinValue) return DOOR_CLOSED;
-  return DOOR_OPEN;
+  return pinValue ? DOOR_CLOSED : DOOR_OPEN;
 }
 
 // Reads the value of a pin, returning a promise of the result
