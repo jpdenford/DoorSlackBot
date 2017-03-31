@@ -8,11 +8,13 @@ to a Slack Channel
 - Raspberry PI
 
 ### Installation
-1. ```
-  git clone https://github.com/jpdenford/ToiletBot.git
-  cd ToiletBot
-  npm install
-  ```
+
+1. Clone repo and install dependencies  
+    ``` sh  
+    git clone https://github.com/jpdenford/ToiletBot.git  
+    cd ToiletBot  
+    npm install  
+    ```
 2. Create a Slack Bot  
    https://api.slack.com/bot-users
 3. Find the channelID where you want the message to be posted  
@@ -22,4 +24,4 @@ to a Slack Channel
 ### Running
 Run command
 `sudo node index.js`  
-If you want to leave the process running, run `sudo node index.js &`
+If you want to leave the process running, run `sudo nohup sudo node index.js &`
