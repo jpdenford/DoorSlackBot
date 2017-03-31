@@ -1,4 +1,4 @@
-# Post the status of the toilet door to slack using Raspberry Pi
+# Post the status of a door to slack using Raspberry Pi
 
 A simple bot using node js to poll a door sensor (gpio pin) and post the result
 to a Slack Channel
@@ -11,8 +11,8 @@ to a Slack Channel
 
 1. Clone repo and install dependencies  
     ``` sh  
-    git clone https://github.com/jpdenford/ToiletBot.git  
-    cd ToiletBot  
+    git clone https://github.com/jpdenford/DoorSlackBot.git  
+    cd DoorSlackBot  
     npm install  
     ```
 2. Create a Slack Bot  
